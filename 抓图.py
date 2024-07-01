@@ -38,8 +38,6 @@ from PyQt5.QtCore import Qt, QRect, QPoint, QSize,pyqtSignal,QEvent
 RES_PATH = "P:/0P/lora训练/"
 # 背景图文件名
 BK_NAME = "background.jpg"
-# 截图音效文件名,已经弃用
-# WAV_NAME = "Windows Balloon.wav"
 # 无配置文件时的默认乐谱,抓图时播放的提示音,包括C0到B8的范围,支持升降调例如C#4 Cb4
 MUSIC_NOTES = ['G3', 'A3', 'C4', 'C4', 'D4', 'D4', 'E4', 'C4', 'A3', 'G3', 'A3', 'C4', 'C4', 'D4', 'D4', 'E4', 'E4', 'C4']
 MIDI乐器编号 = 24  # 0为Acoustic Grand Piano, 1为Electric Grand Piano, 2为Harpsichord, 3为Clavinet 10 Musicbox 八音盒 24 Acoustic Guitar(nylon) 尼龙弦吉他 等等...
