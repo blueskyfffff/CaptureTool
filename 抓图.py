@@ -24,9 +24,9 @@ def check_and_install_packages(package_list):
 
 packages_to_check = ['PyQt5', 'keyboard', 'mouse', 'pygame']
 check_and_install_packages(packages_to_check)
-# 如果出错提示:qt.qpa.plugin: Could not find the Qt platform plugin "windows" in ""
+# 虚拟环境中执行可能会出错,如果出错提示:qt.qpa.plugin: Could not find the Qt platform plugin "windows" in ""
 # This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
-# 命令行先运行命令:set "QT_PLUGIN_PATH=%VIRTUAL_ENV%\Lib\site-packages\PyQt5\Qt5\plugins"
+# 命令行先运行命令:set "QT_PLUGIN_PATH=%VIRTUAL_ENV%\Lib\site-packages\PyQt5\Qt5\plugins" 再运行py脚本,这个命令只能在激活虚拟环境后才能运行
 
 # 依赖库说明:PyQt5用来创建GUI界面,keyboard用来设置全局快捷键,pygame播放声音,mouse获取鼠标坐标
 import glob, sys, re, keyboard, pygame, mouse, pygame.midi
