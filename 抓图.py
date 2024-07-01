@@ -732,7 +732,7 @@ class CaptureWindow(QMainWindow):
         self.setmove = 0
 
         self.MUSIC_NOTES = self.config['MUSIC_NOTES'].split(',')
-
+        self.midi_note = 0  # MIDI音高
         self.velocity = 90  # 音量
         # self.duration = 500  # 每个音符的持续时间（毫秒）
 
@@ -813,13 +813,15 @@ class CaptureWindow(QMainWindow):
             note = self.MUSIC_NOTES[self.note_index % len(self.MUSIC_NOTES)]
             midi_note = self.note_mapping[note]
             self.midi_out.set_instrument(self.MIDI乐器编号)  # 设置乐器编号，0 是钢琴
-            self.midi_out.note_off(midi_note, self.velocity)  # 发送音符关闭消息
+            self.midi_out.note_off(self.midi_note, self.velocity)  # 发送音符关闭消息
             self.midi_out.note_on(midi_note, self.velocity)  # 发送音符开启消息
+            self.midi_note = midi_note
         except:
             midi_note = self.note_mapping["F7"]
             self.midi_out.set_instrument(self.MIDI乐器编号)  # 设置乐器编号，0 是钢琴
-            self.midi_out.note_off(midi_note, self.velocity)  # 发送音符关闭消息
+            self.midi_out.note_off(self.midi_note, self.velocity)  # 发送音符关闭消息
             self.midi_out.note_on(midi_note, self.velocity)  # 发送音符开启消息
+            self.midi_note = midi_note
             pass
 
         # 更新音符索引
@@ -846,6 +848,38 @@ class CaptureWindow(QMainWindow):
         pygame.midi.quit()
         
         self.quitApplication()
+
+
+class TagsWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('Tags Window')
+        self.setGeometry(100, 100, 600, 400)
+        self.setAcceptDrops(True)  # 设置窗口接受拖拽事件
+        self.image_label = QLabel(self)  # 创建一个标签用于显示图片
+        self.image_label.setGeometry(10, 10, 580, 380)
+        self.show()
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        for url in event.mimeData().urls():
+            file_path = url.toLocalFile()
+            if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
+                self.show_image(file_path)
+
+    def show_image(self, file_path):
+        pixmap = QPixmap(file_path)
+        self.image_label.setPixmap(pixmap.scaled(self.image_label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+        
 # 读取配置
 def read_config(file_path):
     config = {}
