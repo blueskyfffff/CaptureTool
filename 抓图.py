@@ -262,16 +262,7 @@ class SettingsWindow(QWidget):
         # 这里处理滑块值变化
         self.capture_window.velocity = value
         
-    # def on_midi_edit_velocity_changed(self, text):
-    #     # 尝试将编辑框中的文本转换为整数
-    #     try:
-    #         velocity = int(text)
-    #         # 如果转换成功，则更新变量 MIDI乐器编号
-    #         # self.velocity = velocity
-    #         self.capture_window.velocity = velocity
-    #     except ValueError:
-    #         # 如果转换失败（例如，文本不是有效的整数），则忽略
-    #         pass
+
     def openImageFolder(self):
         # 获取当前编辑框中的路径
         folder_path = self.image_folder_edit.text()
@@ -806,26 +797,16 @@ class CaptureWindow(QMainWindow):
         self.window_moved.emit(self.x(), self.y())
 
     def startCapture(self):  
-        # self.path = self.lineEdit.text()
         self.path =  self.config['image_folder']
         if not os.path.exists(self.path):
             os.makedirs(self.path)
-        # 使用os.path.basename获取最后的文件夹名（或文件名）  
-        # folder_name = os.path.basename(os.path.normpath(self.config['image_folder']))  
 
-        # self.fmp = folder_name.split('_')[1]
         n = get_unique_filename(self.path, self.config['image_prefix'])
         self.screenshot_number = n+1  
-        # filename = self.path+f'{self.fmq}{self.screenshot_number}.png'  # generate filename self.screenshot_number += 1  
         fmq = self.config['image_prefix']
         filename = self.path + f'/{fmq}_{self.screenshot_number:04d}.png'  
         self.saveScreenshot(filename)  # save screenshot with generated filename  
-        # 加载声音文件（确保该文件与脚本在同一目录下，或者提供正确的路径）
 
-        # sound_file =f"./{WAV_NAME}"
-        # if not os.path.exists(sound_file):
-        #     sound_file = f'{RES_PATH}{WAV_NAME}'
-        # sound = pygame.mixer.Sound(sound_file)
         # 播放音符
         try:
             # 使用split()方法将字符串转换为列表
@@ -840,15 +821,12 @@ class CaptureWindow(QMainWindow):
             self.midi_out.note_off(midi_note, self.velocity)  # 发送音符关闭消息
             self.midi_out.note_on(midi_note, self.velocity)  # 发送音符开启消息
             pass
-        # # 关闭MIDI输出设备
-        # del midi_out
-        # pygame.midi.quit()
 
         # 更新音符索引
         self.note_index += 1
+        if self.note_index>=len(self.MUSIC_NOTES):
+            self.note_index=0
 
-        # 播放声音
-        # sound.play()
     def updateConfig(self, updated_config):
         # Update the config in the main window
         self.config = updated_config
@@ -861,6 +839,13 @@ class CaptureWindow(QMainWindow):
         screenshot.save(filename)
         print(f"Screenshot saved to {filename}")
   
+    def closeEvent(self, event):
+        # Save config on close
+        # # 关闭MIDI输出设备
+        del midi_out
+        pygame.midi.quit()
+        
+        self.quitApplication()
 # 读取配置
 def read_config(file_path):
     config = {}
