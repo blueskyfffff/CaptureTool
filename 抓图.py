@@ -732,7 +732,7 @@ class CaptureWindow(QMainWindow):
         self.setmove = 0
 
         self.MUSIC_NOTES = self.config['MUSIC_NOTES'].split(',')
-
+        self.midi_note = 0  # MIDI音高
         self.velocity = 90  # 音量
         # self.duration = 500  # 每个音符的持续时间（毫秒）
 
@@ -813,13 +813,15 @@ class CaptureWindow(QMainWindow):
             note = self.MUSIC_NOTES[self.note_index % len(self.MUSIC_NOTES)]
             midi_note = self.note_mapping[note]
             self.midi_out.set_instrument(self.MIDI乐器编号)  # 设置乐器编号，0 是钢琴
-            self.midi_out.note_off(midi_note, self.velocity)  # 发送音符关闭消息
+            self.midi_out.note_off(self.midi_note, self.velocity)  # 发送音符关闭消息
             self.midi_out.note_on(midi_note, self.velocity)  # 发送音符开启消息
+            self.midi_note = midi_note
         except:
             midi_note = self.note_mapping["F7"]
             self.midi_out.set_instrument(self.MIDI乐器编号)  # 设置乐器编号，0 是钢琴
-            self.midi_out.note_off(midi_note, self.velocity)  # 发送音符关闭消息
+            self.midi_out.note_off(self.midi_note, self.velocity)  # 发送音符关闭消息
             self.midi_out.note_on(midi_note, self.velocity)  # 发送音符开启消息
+            self.midi_note = midi_note
             pass
 
         # 更新音符索引
