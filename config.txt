@@ -1,0 +1,7 @@
+resolution=1024x1024
+window=652,96
+screenshot_shortcut=1
+image_folder=1_cat
+image_prefix=cat
+color=#2abfff
+MUSIC_NOTES=G3,A3,C4,C4,D4,D4,E4,C4,A3,G3,A3,C4,C4,D4,D4,E4,E4,C4
