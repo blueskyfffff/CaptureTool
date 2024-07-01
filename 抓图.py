@@ -1,6 +1,8 @@
 ﻿import pkg_resources
 import subprocess,os
 
+
+
 # 检查依赖库是否安装，如果没有安装则自动安装
 def install_package(package):
     """安装指定的包"""
