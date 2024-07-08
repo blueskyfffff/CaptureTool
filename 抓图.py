@@ -68,7 +68,7 @@ class SettingsWindow(QWidget):
         self.last_mouse_pos = None
         self.capture_window.isShortcutEnabled = True
         self.opacity = 1.0  # 初始透明度
-  
+        
         # self.resize(self.original_width, self.original_height)
     def initUI(self):
         self.MUSIC_NOTES = self.config['MUSIC_NOTES'].split(",")
@@ -237,7 +237,8 @@ class SettingsWindow(QWidget):
         # 设置控件字体大小
         self.set_widget_font_size(self.window(),17)
         self.pos0 = self.pos()
-
+        # 置顶
+        
     def onSetTag(self):
         return
 
@@ -467,13 +468,6 @@ class SettingsWindow(QWidget):
                 # 恢复窗口标题栏
                 # self.setWindowFlags(self.windowFlags() | Qt.WindowTitleHint)
                 self.setWindowFlags(Qt.WindowFlags(Qt.Widget))
-                    # 切换窗口的窗口标志以显示或隐藏标题栏
-                # if self.windowFlags() & Qt.WindowFlags(Qt.FramelessWindowHint):
-                #     # 如果当前是无边框（即标题栏隐藏），则恢复默认状态
-                #     self.setWindowFlags(Qt.WindowFlags(Qt.Widget))
-                # else:
-                #     # 否则，设置为无边框窗口以隐藏标题栏
-                #     self.setWindowFlags(Qt.WindowFlags(Qt.FramelessWindowHint ))  # 保持窗口置顶可选
                 self.show()
                 self.is_maximized = False
             else:
@@ -1068,7 +1062,6 @@ def main():
 
     capture_window = CaptureWindow(config)
     settings_window = SettingsWindow(config, capture_window)
-    # settings_window.loadBackgroundImage(background_image)  # 加载背景图片
 
     settings_window.config_updated.connect(capture_window.updateConfig)   
 
