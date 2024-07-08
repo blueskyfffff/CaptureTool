@@ -41,6 +41,7 @@ BG_NAME = "background.jpg"
 # 无配置文件时的默认乐谱,抓图时播放的提示音,包括C0到B8的范围,支持升降调例如C#4 Cb4
 MUSIC_NOTES = ['G3', 'A3', 'C4', 'C4', 'D4', 'D4', 'E4', 'C4', 'A3', 'G3', 'A3', 'C4', 'C4', 'D4', 'D4', 'E4', 'E4', 'C4']
 MIDI乐器编号 = 24  # 0为Acoustic Grand Piano, 1为Electric Grand Piano, 2为Harpsichord, 3为Clavinet 10 Musicbox 八音盒 24 Acoustic Guitar(nylon) 尼龙弦吉他 等等...
+MAX_NUMBER_LENGTH = 5  # 图片后缀最大位数
 # 设置窗口
 class SettingsWindow(QWidget):
     # Define a custom signal that will be emitted when the window is closed
@@ -854,7 +855,7 @@ class CaptureWindow(QMainWindow):
         n = get_unique_filename(self.path, self.config['image_prefix'])
         self.screenshot_number = n+1  
         fmq = self.config['image_prefix']
-        filename = self.path + f'/{fmq}_{self.screenshot_number:05d}.png'  
+        filename = self.path + f'/{fmq}_{self.screenshot_number:0{MAX_NUMBER_LENGTH}d}.png'  
         self.saveScreenshot(filename)  # save screenshot with generated filename  
 
         # 播放音符
@@ -966,7 +967,7 @@ def get_unique_filename(path, prefix):
         os.makedirs(path)
     
     # 获取目录中所有以指定前缀开头的文件名
-    existing_files = glob.glob(os.path.join(path, f'*{prefix}*.png'))
+    existing_files = glob.glob(os.path.join(path, f'{prefix}_*.png'))
     
     # 如果没有找到任何文件，返回1
     if not existing_files:
@@ -994,7 +995,7 @@ def get_unique_filename(path, prefix):
     if len(existing_files) != max_number:
         # 重命名所有文件
         for i, file in enumerate(sorted(existing_files), start=1):
-            new_filename = f'{prefix}_{str(i).zfill(4)}.png'
+            new_filename = f'{prefix}_{str(i).zfill(MAX_NUMBER_LENGTH)}.png'
             new_filepath = os.path.join(path, new_filename)
             os.rename(file, new_filepath)
         numbers = []
