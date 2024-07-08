@@ -1,8 +1,6 @@
 ﻿import pkg_resources
 import subprocess,os
 
-
-
 # 检查依赖库是否安装，如果没有安装则自动安装
 def install_package(package):
     """安装指定的包"""
@@ -28,16 +26,18 @@ check_and_install_packages(packages_to_check)
 # This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
 # 命令行先运行命令:set "QT_PLUGIN_PATH=%VIRTUAL_ENV%\Lib\site-packages\PyQt5\Qt5\plugins" 再运行py脚本,这个命令只能在激活虚拟环境后才能运行
 
-# 依赖库说明:PyQt5用来创建GUI界面,keyboard用来设置全局快捷键,pygame播放声音,mouse获取鼠标坐标
+# 依赖库说明:PyQt5用来创建GUI界面,keyboard用来创建全局快捷键,pygame播放声音,mouse获取鼠标坐标
 import glob, sys, re, keyboard, pygame, mouse, pygame.midi
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout, QLineEdit, QPushButton, QHBoxLayout,QColorDialog,QSlider
 from PyQt5.QtGui import QPainter, QPen, QPixmap, QPalette, QGuiApplication,QFont,QColor,QImage
 from PyQt5.QtCore import Qt, QRect, QPoint, QSize,pyqtSignal,QEvent
 
+# 默认背景图URL,background.jpg不存在时会自动下载
+BG_URL = 'https://i0.hdslb.com/bfs/album/6ad25a5643a9357b4c38dea7c096522eb8211e39.jpg'
 # 资源默认路径:存放background.jpg的路径
 RES_PATH = "P:/0P/lora训练/"
 # 背景图文件名
-BK_NAME = "background.jpg"
+BG_NAME = "background.jpg"
 # 无配置文件时的默认乐谱,抓图时播放的提示音,包括C0到B8的范围,支持升降调例如C#4 Cb4
 MUSIC_NOTES = ['G3', 'A3', 'C4', 'C4', 'D4', 'D4', 'E4', 'C4', 'A3', 'G3', 'A3', 'C4', 'C4', 'D4', 'D4', 'E4', 'E4', 'C4']
 MIDI乐器编号 = 24  # 0为Acoustic Grand Piano, 1为Electric Grand Piano, 2为Harpsichord, 3为Clavinet 10 Musicbox 八音盒 24 Acoustic Guitar(nylon) 尼龙弦吉他 等等...
@@ -76,7 +76,7 @@ class SettingsWindow(QWidget):
         self.setWindowTitle('设置')
         self.layout = QVBoxLayout(self)
         # 设置窗口的背景图片
-        self.loadBackgroundImage(BK_NAME)
+        self.loadBackgroundImage(BG_NAME)
         self.setAttribute(Qt.WA_StyledBackground, False)  # 启用自定义背景
         self.setAutoFillBackground(False)  # 禁用自动填充背景
         self.setBackgroundRole(QPalette.Window)  # 设置背景角色为窗口
@@ -86,15 +86,17 @@ class SettingsWindow(QWidget):
         # Resolution
         self.resolution_layout = QHBoxLayout()
         self.layout.addLayout(self.resolution_layout)
-        self.resolution_label = QLabel('分辨率:', self)
+        self.resolution_label = QLabel('分辨率  :', self)
         self.resolution_layout.addWidget(self.resolution_label)
 
         # 创建编辑框，并设置验证器和输入掩码
         self.resolution_width = QLineEdit(self)
+        self.resolution_width.setMaxLength(4)
         self.resolution_width.setText(str(self.config['resolution']['width']))
         self.resolution_layout.addWidget(self.resolution_width)
 
         self.resolution_height = QLineEdit(self)
+        self.resolution_height.setMaxLength(4)
         self.resolution_height.setText(str(self.config['resolution']['height']))
         self.resolution_layout.addWidget(self.resolution_height)
         
@@ -104,8 +106,10 @@ class SettingsWindow(QWidget):
         self.window_label = QLabel('窗口坐标:', self)
         self.window_layout.addWidget(self.window_label)
         self.window_x = QLineEdit(str(self.config['window']['x']), self)
+        self.window_x.setMaxLength(4)
         self.window_layout.addWidget(self.window_x)
         self.window_y = QLineEdit(str(self.config['window']['y']), self)
+        self.window_y.setMaxLength(4)
         self.window_layout.addWidget(self.window_y)
 
         # Image Folder
@@ -115,21 +119,20 @@ class SettingsWindow(QWidget):
         self.image_folder_layout.addWidget(self.image_folder_label)
         self.image_folder_edit = QLineEdit(self.config['image_folder'], self)
         self.image_folder_layout.addWidget(self.image_folder_edit)
-
-        # Screenshot Shortcut
+        
+        # Image Prefix
         self.shortcut_layout = QHBoxLayout()
         self.layout.addLayout(self.shortcut_layout)
-        self.shortcut_label = QLabel('快捷键:', self)
-        self.shortcut_layout.addWidget(self.shortcut_label)
-        self.shortcut_edit = QLineEdit(self.config['screenshot_shortcut'], self)
-        self.shortcut_layout.addWidget(self.shortcut_edit)
-        # Image Prefix
-        self.image_prefix_layout = QHBoxLayout()
-        self.layout.addLayout(self.image_prefix_layout)
         self.image_prefix_label = QLabel('图片前缀:', self)
         self.shortcut_layout.addWidget(self.image_prefix_label)
         self.image_prefix_edit = QLineEdit(self.config['image_prefix'], self)
         self.shortcut_layout.addWidget(self.image_prefix_edit)
+
+        # Screenshot Shortcut
+        self.shortcut_label = QLabel('快捷键  :', self)
+        self.shortcut_layout.addWidget(self.shortcut_label)
+        self.shortcut_edit = QLineEdit(self.config['screenshot_shortcut'], self)
+        self.shortcut_layout.addWidget(self.shortcut_edit)
         
         # 连接窗口坐标编辑框的textChanged信号
         self.window_x.textChanged.connect(self.updateCaptureWindowPosition)
@@ -146,7 +149,6 @@ class SettingsWindow(QWidget):
 
         # 连接image_prefix编辑框的textChanged信号
         self.image_prefix_edit.textChanged.connect(self.updateImagePrefix)
-
         # 创建按钮布局
         button_layout = QHBoxLayout()
         self.layout.addLayout(button_layout)
@@ -233,10 +235,12 @@ class SettingsWindow(QWidget):
         self.setWidgetsTransparent(self)
         # 设置控件字体大小
         self.set_widget_font_size(self.window(),17)
+        self.pos0 = self.pos()
 
     def onSetTag(self):
         return
 
+  
     def on_midi_edit1_changed(self, text):
         # 将编辑框中的文本（字符串）转换回列表
         try:
@@ -318,8 +322,8 @@ class SettingsWindow(QWidget):
                 self.opacity += 0.05  # 增加透明度
             else:
                 self.opacity -= 0.05  # 减少透明度
-            if self.opacity <0.01:
-                self.opacity = 0.01
+            if self.opacity <0.002:
+                self.opacity = 0.002
             if self.opacity >1.0:
                 self.opacity = 1.0
             # 限制透明度在0.1到1.0之间
@@ -349,15 +353,49 @@ class SettingsWindow(QWidget):
             self.move(round(self.x() + (center.x() - new_x)), round(self.y() + (center.y() - new_y)))
 
     def eventFilter(self, obj, event):
+        
+        """遍历并找到所有 QLineEdit 控件"""
+        for child in self.findChildren(QLineEdit):
+            
+            if obj == child:
+                if event.type() == event.FocusIn:
+                    print("Edit box activated.")
+                    # 当编辑框激活避免触发全局快捷键
+                    self.capture_window.lineEditHasFocus = True 
+                elif event.type() == event.FocusOut:
+                    print("Edit box deactivated.")
+                    self.capture_window.lineEditHasFocus = False 
+            
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Shift:
                 pos = mouse.get_position()
                 self.last_mouse_pos = QPoint(pos[0], pos[1])
-                self.shift_pressed = True
+                if self.shift_pressed == False:
+                    self.shift_pressed = True
+                    self.pos0 = self.pos()
+                    self.setWindowOpacity(0.002)
+                    # 隐藏窗口标题栏
+                    # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
+                    # 最大化窗口
+                    # 置顶
+                    self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+                    self.showMaximized()
+                    self.show()
                 return True
         elif event.type() == QEvent.KeyRelease:
             if event.key() == Qt.Key_Shift:
-                self.shift_pressed = False
+                if self.shift_pressed == True:
+                    self.shift_pressed = False
+                    # 还原窗口
+                    self.showNormal()
+                    # 恢复窗口标题栏
+                    # self.setWindowFlags(Qt.WindowFlags(Qt.Widget))
+                    # 取消置顶
+                    self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+                    self.show()
+                    self.move(self.pos0)
+                    self.setWindowOpacity(1)
+                
             if event.key() == Qt.Key_V:
                 image_width = self.background_pixmap.width()
                 image_height = self.background_pixmap.height()
@@ -426,14 +464,22 @@ class SettingsWindow(QWidget):
                 # 还原窗口
                 self.showNormal()
                 # 恢复窗口标题栏
-                self.setWindowFlags(self.windowFlags() | Qt.WindowTitleHint)
+                # self.setWindowFlags(self.windowFlags() | Qt.WindowTitleHint)
+                self.setWindowFlags(Qt.WindowFlags(Qt.Widget))
+                    # 切换窗口的窗口标志以显示或隐藏标题栏
+                # if self.windowFlags() & Qt.WindowFlags(Qt.FramelessWindowHint):
+                #     # 如果当前是无边框（即标题栏隐藏），则恢复默认状态
+                #     self.setWindowFlags(Qt.WindowFlags(Qt.Widget))
+                # else:
+                #     # 否则，设置为无边框窗口以隐藏标题栏
+                #     self.setWindowFlags(Qt.WindowFlags(Qt.FramelessWindowHint ))  # 保持窗口置顶可选
                 self.show()
                 self.is_maximized = False
             else:
+                # 隐藏窗口标题栏
+                self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
                 # 最大化窗口
                 self.showMaximized()
-                # 隐藏窗口标题栏
-                self.setWindowFlags(self.windowFlags() & ~Qt.WindowTitleHint)
                 self.show()
                 self.is_maximized = True
 
@@ -533,7 +579,7 @@ class SettingsWindow(QWidget):
             painter.drawPixmap(0, 0, scaled_pixmap)
         except:
             
-            self.background_pixmap = QPixmap(BK_NAME)
+            self.background_pixmap = QPixmap(BG_NAME)
             pass
 
     def calculate_fill_scaled_size_final(self, window_width, window_height, image_width, image_height):
@@ -713,6 +759,8 @@ class CaptureWindow(QMainWindow):
         self.note_index = 0
         self.draw_color = QColor(self.config['color'])
         self.MIDI乐器编号  = MIDI乐器编号
+        # 初始化一个标志，用来判断lineEdit是否获得焦点  
+        self.lineEditHasFocus = False
     
     def initUI(self):
         self.setGeometry(self.config['window']['x'], self.config['window']['y'], self.config['resolution']['width']+12, self.config['resolution']['height']+12)
@@ -797,6 +845,8 @@ class CaptureWindow(QMainWindow):
         self.window_moved.emit(self.x(), self.y())
 
     def startCapture(self):  
+        if self.lineEditHasFocus:
+            return
         self.path =  self.config['image_folder']
         if not os.path.exists(self.path):
             os.makedirs(self.path)
@@ -804,7 +854,7 @@ class CaptureWindow(QMainWindow):
         n = get_unique_filename(self.path, self.config['image_prefix'])
         self.screenshot_number = n+1  
         fmq = self.config['image_prefix']
-        filename = self.path + f'/{fmq}_{self.screenshot_number:04d}.png'  
+        filename = self.path + f'/{fmq}_{self.screenshot_number:05d}.png'  
         self.saveScreenshot(filename)  # save screenshot with generated filename  
 
         # 播放音符
@@ -996,24 +1046,22 @@ def get_image(url,filename):
 def main():
     app = QApplication(sys.argv)
     config_file = 'config.txt'
-    background_image = BK_NAME
+    background_image = BG_NAME
 
     # 检查文件是否存在
     # if not os.path.exists(config_file):
     #     config_file = f'{RES_PATH}config.txt'
     if not os.path.exists(background_image):
-        background_image = f'{RES_PATH}{BK_NAME}'
+        background_image = f'{RES_PATH}{BG_NAME}'
         if not os.path.exists(background_image):
 
-            # 定义图片的URL和保存的文件名
-            url = 'https://i0.hdslb.com/bfs/album/6ad25a5643a9357b4c38dea7c096522eb8211e39.jpg'
             # url = 'https://i0.hdslb.com/bfs/album/ef43dee53b9a3481316eeec80c4b4ce18031633c.png'
             # url = 'https://i0.hdslb.com/bfs/album/a9937c43c1f04581e2bf97c20ea925f25acd49f8.jpg'
-            filename = BK_NAME
-            get_image(url,filename)
+            filename = BG_NAME
+            get_image(BG_URL,filename)
 
         else:
-            background_image = f'{RES_PATH}{BK_NAME}'
+            background_image = f'{RES_PATH}{BG_NAME}'
 
     config = read_config(config_file)
 

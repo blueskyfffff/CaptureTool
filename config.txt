@@ -1,5 +1,5 @@
 resolution=1024x1024
-window=652,96
+window=534,153
 screenshot_shortcut=1
 image_folder=1_cat
 image_prefix=cat
