@@ -27,10 +27,11 @@ check_and_install_packages(packages_to_check)
 # 命令行先运行命令:set "QT_PLUGIN_PATH=%VIRTUAL_ENV%\Lib\site-packages\PyQt5\Qt5\plugins" 再运行py脚本,这个命令只能在激活虚拟环境后才能运行
 
 # 依赖库说明:PyQt5用来创建GUI界面,keyboard用来创建全局快捷键,pygame播放声音,mouse获取鼠标坐标
-import glob, sys, re, keyboard, pygame, mouse, pygame.midi
+import glob, sys, re, keyboard, pygame, mouse, pygame.midi,math
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout, QLineEdit, QPushButton, QHBoxLayout,QColorDialog,QSlider
-from PyQt5.QtGui import QPainter, QPen, QPixmap, QPalette, QGuiApplication,QFont,QColor,QImage
+from PyQt5.QtGui import QPainter, QPen, QPixmap, QPalette, QGuiApplication,QFont,QColor,QImage,QMouseEvent
 from PyQt5.QtCore import Qt, QRect, QPoint, QSize,pyqtSignal,QEvent
+
 
 # 默认背景图URL,background.jpg不存在时会自动下载
 BG_URL = 'https://i0.hdslb.com/bfs/album/6ad25a5643a9357b4c38dea7c096522eb8211e39.jpg'
@@ -50,6 +51,8 @@ class SettingsWindow(QWidget):
         super().__init__()
         self.capture_window = capture_window
         self.config = config
+        # # 设置窗口背景色为白色
+        # self.setStyleSheet("QWidget { background-color: white }")
         self.initUI()
         # 连接信号
         self.capture_window.window_moved.connect(self.updateWindowPosition)
@@ -58,19 +61,22 @@ class SettingsWindow(QWidget):
         self.original_width = 547
         self.original_height = 338
         self.lb = 0
-        self.image_paths = []  # 存储图片路径
         self.current_image_index = -1  # 当前显示的图片索引
         self.image_label = QLabel()  # 显示图片的标签
         self.layout.addWidget(self.image_label)
         self.setAcceptDrops(True)  # 设置接受拖拽
 
         self.shift_pressed = False
+        self.s_pressed = False
         self.last_mouse_pos = None
         self.capture_window.isShortcutEnabled = True
         self.opacity = 1.0  # 初始透明度
+        self.setMouseTracking(True)  # 启用鼠标跟踪
+        self.img_browse = False
         
         # self.resize(self.original_width, self.original_height)
     def initUI(self):
+        self.image_paths = []  # 存储图片路径
         self.MUSIC_NOTES = self.config['MUSIC_NOTES'].split(",")
         self.MIDI乐器编号 = MIDI乐器编号  # MIDI乐器编号
         self.setGeometry(50, 200, 547, 338)
@@ -237,7 +243,7 @@ class SettingsWindow(QWidget):
         # 设置控件字体大小
         self.set_widget_font_size(self.window(),17)
         self.pos0 = self.pos()
-        # 置顶
+        self.setFocus()
         
     def onSetTag(self):
         return
@@ -372,9 +378,12 @@ class SettingsWindow(QWidget):
             if event.key() == Qt.Key_Shift:
                 pos = mouse.get_position()
                 self.last_mouse_pos = QPoint(pos[0], pos[1])
-                if self.shift_pressed == False:
-                    self.shift_pressed = True
-                    self.pos0 = self.pos()
+                # if self.shift_pressed == False:
+
+                self.shift_pressed = True
+                self.pos0 = self.pos()
+                if self.img_browse == False:
+                    
                     self.setWindowOpacity(0.002)
                     # 隐藏窗口标题栏
                     # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
@@ -384,10 +393,22 @@ class SettingsWindow(QWidget):
                     self.showMaximized()
                     self.show()
                 return True
+        
+            if event.key() == Qt.Key_S:
+                if self.s_pressed == False:
+                    # 设置焦点到窗口
+                    self.setFocus()
+                    pos = mouse.get_position()
+                    self.start_pos = QPoint(pos[0], pos[1])
+                    # self.start_pos = event.globalPos()
+                    self.s_pressed = True
+                    
         elif event.type() == QEvent.KeyRelease:
             if event.key() == Qt.Key_Shift:
-                if self.shift_pressed == True:
-                    self.shift_pressed = False
+                # if self.shift_pressed == True:
+                
+                self.shift_pressed = False
+                if self.img_browse == False:
                     # 还原窗口
                     self.showNormal()
                     # 恢复窗口标题栏
@@ -397,13 +418,16 @@ class SettingsWindow(QWidget):
                     self.show()
                     self.move(self.pos0)
                     self.setWindowOpacity(1)
+            if event.key() == Qt.Key_S:
+                self.s_pressed = False
+                
                 
             if event.key() == Qt.Key_V:
                 image_width = self.background_pixmap.width()
                 image_height = self.background_pixmap.height()
                 self.resize(QSize(image_width,image_height))
                 return True
-
+            
         elif event.type() == QEvent.MouseButtonPress:
             self.last_mouse_pos = event.globalPos()
             return False
@@ -413,6 +437,45 @@ class SettingsWindow(QWidget):
                 self.capture_window.move(self.capture_window.x() + delta.x(), self.capture_window.y() + delta.y())
                 self.last_mouse_pos = event.globalPos()
             return True
+        elif event.type() == QEvent.MouseMove and self.s_pressed:
+            
+            if self.s_pressed and self.start_pos is not None:
+                # # x = event.globalPos().x() - self.start_pos[0]
+                # x = event.globalPos().x() - self.start_pos.x()
+                # # x = mouse.get_position()[0] - self.start_pos[0]
+                # new_width = self.width() + x
+                # new_height = self.height() + int(x * self.height() / self.width())
+                # self.resize(new_width, new_height)
+                # # self.start_pos = mouse.get_position()
+                # self.start_pos = event.globalPos()
+                
+                current_pos = event.globalPos()
+                dx = current_pos.x() - self.start_pos.x()
+                dy = current_pos.y() - self.start_pos.y()
+                
+                # 计算移动距离
+                move_distance = math.sqrt(dx**2 + dy**2)
+                
+                # 根据x轴移动方向决定放大或缩小
+                if dx > 0:
+                    scale_factor = 1 + (move_distance / self.width())
+                else:
+                    scale_factor = 1 - (move_distance / self.width())
+                
+                image_width = self.background_pixmap.width()
+                image_height = self.background_pixmap.height()
+                # 缩放窗口
+                new_width = self.width() * scale_factor
+                
+                new_height = new_width * (image_height / image_width)
+                # new_height = self.height() * scale_factor
+                self.resize(int(new_width), int(new_height))
+                
+                # 更新起始位置
+                self.start_pos = current_pos
+                
+                
+                return True
 
         return super().eventFilter(obj, event)
         return False
@@ -497,11 +560,13 @@ class SettingsWindow(QWidget):
         if not v:   
             # 隐藏窗口标题栏
             self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)  # 设置无边框窗口
-        
+            # 窗口控件隐藏状态
+            self.img_browse = False
             # self.setWindowFlags(self.windowFlags() & ~Qt.WindowTitleHint)
         
         else:
             # 获取窗口和图片的尺寸
+            self.img_browse = True
             window_width = self.width()
             window_height = self.height()
             image_width = self.background_pixmap.width()
@@ -560,10 +625,10 @@ class SettingsWindow(QWidget):
         try:
             painter = QPainter(self)
             # 获取窗口和图片的尺寸
-            window_width = self.width()
-            window_height = self.height()
             image_width = self.background_pixmap.width()
             image_height = self.background_pixmap.height()
+            window_width = self.width()
+            window_height = self.height()
             
             # 使用示例尺寸最终计算缩放后的尺寸
             new_width,new_height = self.calculate_fill_scaled_size_final(window_width, window_height, image_width, image_height)
@@ -722,6 +787,8 @@ class SettingsWindow(QWidget):
         self.config_updated.emit(self.config)  # Emit the signal with the updated config
         # 更新抓图窗口的位置
         self.updateCaptureWindowPosition()
+        if self.MUSIC_NOTES == []:
+            self.MUSIC_NOTES = MUSIC_NOTES
         with open('config.txt', 'w') as f:
             f.write(f"resolution={self.config['resolution']['width']}x{self.config['resolution']['height']}\n")
             f.write(f"window={self.config['window']['x']},{self.config['window']['y']}\n")
@@ -849,7 +916,7 @@ class CaptureWindow(QMainWindow):
         n = get_unique_filename(self.path, self.config['image_prefix'])
         self.screenshot_number = n+1  
         fmq = self.config['image_prefix']
-        filename = self.path + f'/{fmq}_{self.screenshot_number:0{MAX_NUMBER_LENGTH}d}.png'  
+        filename = self.path + f'/{fmq}{self.screenshot_number:0{MAX_NUMBER_LENGTH}d}.png'  
         self.saveScreenshot(filename)  # save screenshot with generated filename  
 
         # 播放音符
@@ -961,7 +1028,7 @@ def get_unique_filename(path, prefix):
         os.makedirs(path)
     
     # 获取目录中所有以指定前缀开头的文件名
-    existing_files = glob.glob(os.path.join(path, f'{prefix}_*.png'))
+    existing_files = glob.glob(os.path.join(path, f'{prefix}*.png'))
     
     # 如果没有找到任何文件，返回1
     if not existing_files:
@@ -989,7 +1056,7 @@ def get_unique_filename(path, prefix):
     if len(existing_files) != max_number:
         # 重命名所有文件
         for i, file in enumerate(sorted(existing_files), start=1):
-            new_filename = f'{prefix}_{str(i).zfill(MAX_NUMBER_LENGTH)}.png'
+            new_filename = f'{prefix}{str(i).zfill(MAX_NUMBER_LENGTH)}.png'
             new_filepath = os.path.join(path, new_filename)
             os.rename(file, new_filepath)
         numbers = []
